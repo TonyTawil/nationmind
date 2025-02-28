@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  circlemind:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY} 

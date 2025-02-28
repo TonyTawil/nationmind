@@ -26,8 +26,10 @@ logging.basicConfig(
 logger = logging.getLogger("circlemind")
 
 import fitz  # PyMuPDF for PDF extraction
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 # fast-graphrag
@@ -53,6 +55,10 @@ app.add_middleware(
 # =============== Data/Storage Setup ===============
 DATA_DIR = Path("./data")
 DATA_DIR.mkdir(exist_ok=True)
+
+# Path to the frontend build directory
+FRONTEND_DIR = Path("./src")
+INDEX_HTML = Path("./index.html")
 
 # Keep references to loaded GraphRAG instances in memory
 graphs_cache = {}
@@ -912,6 +918,21 @@ async def diagnose_graph_storage(graph_id: str):
                          if needs_rebuild else
                          "Your graph appears to be working correctly."
     }
+
+# =============== Serve Frontend ===============
+# Mount the static files directory
+app.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "assets"), name="assets")
+
+# Serve the index.html for all non-API routes
+@app.get("/{full_path:path}")
+async def serve_frontend(request: Request, full_path: str):
+    # If the path starts with /graphs, it's an API call
+    if full_path.startswith("graphs") or not full_path:
+        # This is an API route, so raise a 404 to let the API handlers take over
+        raise HTTPException(status_code=404, detail="Not found")
+    
+    # For all other paths, serve the index.html
+    return FileResponse(INDEX_HTML)
 
 # If you want to run via "python app.py" directly:
 if __name__ == "__main__":

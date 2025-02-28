@@ -1,20 +1,8 @@
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGraph } from "@/contexts/GraphContext";
-import { apiService, GraphQueryResponse } from "@/services/api";
-
-interface RecentQuery {
-  query: string;
-  response: string;
-  timestamp: string;
-}
 
 export function HomePage() {
   const { currentGraph, loading } = useGraph();
-  const [recentQueries, setRecentQueries] = useState<RecentQuery[]>([]);
-
-  // In a real app, you might fetch recent queries from an endpoint
-  // For now, we'll just simulate this with empty data
 
   return (
     <>
@@ -81,22 +69,9 @@ export function HomePage() {
                 <div>Timestamp</div>
               </div>
 
-              {recentQueries.length === 0 ? (
-                <div className="text-center py-4 text-gray-400">
-                  No recent queries. Try asking a question in the Chat page.
-                </div>
-              ) : (
-                recentQueries.map((q, i) => (
-                  <div
-                    key={i}
-                    className="grid grid-cols-3 gap-4 py-2 border-b border-gray-800"
-                  >
-                    <div className="truncate">{q.query}</div>
-                    <div className="truncate">{q.response}</div>
-                    <div>{q.timestamp}</div>
-                  </div>
-                ))
-              )}
+              <div className="text-center py-4 text-gray-400">
+                No recent queries. Try asking a question in the Chat page.
+              </div>
             </CardContent>
           </Card>
         </>

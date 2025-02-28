@@ -4,28 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useGraph } from "@/contexts/GraphContext";
 import { toast } from "sonner";
-
-// Types for our explorer data
-interface Entity {
-  index: number;
-  id: string;
-  name: string;
-  type: string;
-  description: string;
-}
-
-interface Relationship {
-  index: number;
-  source: string;
-  target: string;
-  source_id: string;
-  target_id: string;
-  source_type: string;
-  target_type: string;
-  description: string;
-  predicate: string;
-  chunks: string[];
-}
+import { apiService, Entity, Relationship } from "@/services/api";
 
 export function KnowledgeExplorerPage() {
   const { currentGraph } = useGraph();
@@ -67,16 +46,8 @@ export function KnowledgeExplorerPage() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `http://localhost:8000/graphs/${currentGraph.id}/explorer`
-      );
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch explorer data: ${response.statusText}`
-        );
-      }
+      const data = await apiService.getExplorerData(currentGraph.id);
 
-      const data = await response.json();
       setEntities(data.entities || []);
       setRelationships(data.relationships || []);
       setChunks(data.chunks || []);
