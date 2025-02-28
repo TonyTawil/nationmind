@@ -14,7 +14,7 @@ ENV FLASK_RUN_HOST=0.0.0.0
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y gcc git && apt-get clean
+RUN apt-get update && apt-get install -y gcc g++ git && apt-get clean
 
 COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
