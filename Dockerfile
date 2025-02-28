@@ -1,34 +1,29 @@
-# Use an official Python runtime as a parent image
-FROM python:3.10-slim
-
-# Set working directory
+FROM node:lts as build-deps
 WORKDIR /app
-
-# Install Node.js and npm
-RUN apt-get update && apt-get install -y \
-    nodejs \
-    npm \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements file and install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy frontend package files
-COPY package.json package-lock.json ./
-
-# Install frontend dependencies
+COPY package*.json ./
 RUN npm install
-
-# Copy the rest of the application
 COPY . .
-
-# Build the frontend
 RUN npm run build
 
-# Expose the port the app runs on
+FROM python:3.11-slim-buster
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+ENV FLASK_APP=assistant.py
+ENV FLASK_RUN_HOST=0.0.0.0
+
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y gcc git && apt-get clean
+
+COPY requirements.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY --from=build-deps /app/dist ./dist
+
+
+COPY . /app
+
 EXPOSE 8000
 
-# Command to run the application
-CMD ["python", "../Circlemind/app.py"] 
+CMD ["python", "app.py"]
