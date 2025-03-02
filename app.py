@@ -57,8 +57,8 @@ DATA_DIR = Path("./data")
 DATA_DIR.mkdir(exist_ok=True)
 
 # Path to the frontend build directory
-FRONTEND_DIR = Path("./src")
-INDEX_HTML = Path("./index.html")
+FRONTEND_DIR = Path("./dist")  # Change to dist if that's where your built files are
+INDEX_HTML = FRONTEND_DIR / "index.html"  # Update the index.html path
 
 # Keep references to loaded GraphRAG instances in memory
 graphs_cache = {}
