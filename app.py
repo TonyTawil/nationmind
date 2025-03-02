@@ -36,6 +36,9 @@ from pydantic import BaseModel
 from fast_graphrag import GraphRAG, QueryParam
 from fast_graphrag._llm import DefaultLLMService, DefaultEmbeddingService
 
+# Ollama integration
+from ollama_local import OllamaLLMService, OllamaEmbeddingService
+
 # =============== FastAPI Setup ===============
 app = FastAPI(
     title="Nationmind API", 
@@ -136,12 +139,22 @@ def load_graphrag(graph_id: str) -> GraphRAG:
         raise HTTPException(404, detail=f"Graph {graph_id} not found.")
 
     meta = load_metadata(graph_id)
-    # Get API key from environment variable
+    
+    # Check if we should use Ollama (local) or OpenAI (cloud)
+    use_ollama = os.environ.get("USE_OLLAMA", "true").lower() in ("true", "1", "yes")
     openai_api_key = os.environ.get("OPENAI_API_KEY", "")
     
-    # Log a warning if the API key is missing
-    if not openai_api_key:
-        logger.warning("OPENAI_API_KEY environment variable is not set. API calls will likely fail.")
+    if use_ollama:
+        logger.info("Using local Ollama models for LLM and embeddings")
+        llm_service = OllamaLLMService(model="mistral-small")
+        embedding_service = OllamaEmbeddingService(model="mxbai-embed-large")
+    else:
+        # Log a warning if the API key is missing
+        if not openai_api_key:
+            logger.warning("OPENAI_API_KEY environment variable is not set. API calls will likely fail.")
+        logger.info("Using OpenAI models for LLM and embeddings")
+        llm_service = DefaultLLMService(api_key=openai_api_key)
+        embedding_service = DefaultEmbeddingService(api_key=openai_api_key)
 
     gr = GraphRAG(
         working_dir=str(g_dir),
@@ -149,8 +162,8 @@ def load_graphrag(graph_id: str) -> GraphRAG:
         entity_types=meta["entity_types"],
         example_queries="\n".join(meta.get("example_queries", [])),
         config=GraphRAG.Config(
-            llm_service=DefaultLLMService(api_key=openai_api_key),
-            embedding_service=DefaultEmbeddingService(api_key=openai_api_key)
+            llm_service=llm_service,
+            embedding_service=embedding_service
         )
     )
 
@@ -809,29 +822,29 @@ async def diagnose_graph_storage(graph_id: str):
     
     # Create a fresh GraphRAG instance with explicit settings
     logger.info("Creating fresh GraphRAG instance")
+    use_ollama = os.environ.get("USE_OLLAMA", "false").lower() in ("true", "1", "yes")
     openai_api_key = os.environ.get("OPENAI_API_KEY", "")
     
-    if not openai_api_key:
-        logger.warning("OPENAI_API_KEY environment variable is not set. API calls will likely fail.")
-    
-    # Try with more explicit domain and entity_types if they're empty
-    domain = meta["domain"]
-    entity_types = meta["entity_types"]
-    
-    if not domain:
-        domain = "Extract all entities and their relationships from the text"
-    
-    if not entity_types:
-        entity_types = ["person", "organization", "location", "object", "concept", "event"]
-    
+    if use_ollama:
+        logger.info("Using local Ollama models for LLM and embeddings")
+        llm_service = OllamaLLMService(model="mistral-small")
+        embedding_service = OllamaEmbeddingService(model="mxbai-embed-large")
+    else:
+        # Log a warning if the API key is missing
+        if not openai_api_key:
+            logger.warning("OPENAI_API_KEY environment variable is not set. API calls will likely fail.")
+        logger.info("Using OpenAI models for LLM and embeddings")
+        llm_service = DefaultLLMService(api_key=openai_api_key)
+        embedding_service = DefaultEmbeddingService(api_key=openai_api_key)
+
     gr = GraphRAG(
         working_dir=str(g_dir),
-        domain=domain,
-        entity_types=entity_types,
+        domain=meta["domain"],
+        entity_types=meta["entity_types"],
         example_queries="\n".join(meta.get("example_queries", [])),
         config=GraphRAG.Config(
-            llm_service=DefaultLLMService(api_key=openai_api_key),
-            embedding_service=DefaultEmbeddingService(api_key=openai_api_key)
+            llm_service=llm_service,
+            embedding_service=embedding_service
         )
     )
     
