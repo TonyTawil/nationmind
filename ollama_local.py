@@ -169,6 +169,17 @@ class OllamaLLMService(BaseLLMService):
             # Use generate endpoint for standard format
             endpoint = f"{self.ollama_url}/api/generate"
             logger.info(f"Using generate endpoint for standard format: {endpoint}")
+            
+            # Define the payload for the generate endpoint
+            payload = {
+                "model": self.model,
+                "prompt": prompt_text,
+                "stream": False,
+                "options": {
+                    "temperature": temperature,
+                    "top_p": top_p
+                }
+            }
         
         logger.info(f"Sending POST request to: {endpoint}")
 
@@ -385,7 +396,16 @@ class OllamaLLMService(BaseLLMService):
                 # If it's a plain Pydantic model, parse it directly
                 try:
                     logger.debug(f"Attempting to parse as regular Pydantic model: {response_model.__name__}")
-                    pmodel = response_model.model_validate_json(final_response_str)
+                    
+                    # Special handling for TAnswer model which needs to be wrapped
+                    if response_model.__name__ == "TAnswer":
+                        # Create a valid TAnswer JSON structure
+                        answer_json = json.dumps({"answer": final_response_str})
+                        logger.info(f"Wrapping response in TAnswer structure: {answer_json[:100]}...")
+                        pmodel = response_model.model_validate_json(answer_json)
+                    else:
+                        pmodel = response_model.model_validate_json(final_response_str)
+                    
                     messages = [
                         {"role": "assistant", "content": final_response_str}
                     ]
@@ -394,6 +414,21 @@ class OllamaLLMService(BaseLLMService):
                 except Exception as e:
                     logger.warning(f"Failed to parse JSON into {response_model}: {e}")
                     logger.warning(f"JSON parsing error details: {traceback.format_exc()}")
+                    
+                    # For TAnswer, create a valid object directly instead of returning a string
+                    if response_model.__name__ == "TAnswer":
+                        try:
+                            # Create TAnswer directly
+                            logger.info("Creating TAnswer object directly")
+                            from fast_graphrag._models import TAnswer
+                            answer_obj = TAnswer(answer=final_response_str)
+                            messages = [
+                                {"role": "assistant", "content": final_response_str}
+                            ]
+                            return answer_obj, messages
+                        except Exception as inner_e:
+                            logger.warning(f"Failed to create fallback TAnswer: {inner_e}")
+                    
                     # Return string fallback
                     messages = [
                         {"role": "assistant", "content": final_response_str}
