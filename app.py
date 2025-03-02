@@ -147,7 +147,7 @@ def load_graphrag(graph_id: str) -> GraphRAG:
     if use_ollama:
         logger.info("Using local Ollama models for LLM and embeddings")
         llm_service = OllamaLLMService(model="mistral-small")
-        embedding_service = OllamaEmbeddingService(model="mxbai-embed-large")
+        embedding_service = OllamaEmbeddingService(model="rjmalagon/gte-qwen2-1.5b-instruct-embed-f16")
     else:
         # Log a warning if the API key is missing
         if not openai_api_key:
@@ -828,7 +828,7 @@ async def diagnose_graph_storage(graph_id: str):
     if use_ollama:
         logger.info("Using local Ollama models for LLM and embeddings")
         llm_service = OllamaLLMService(model="mistral-small")
-        embedding_service = OllamaEmbeddingService(model="mxbai-embed-large")
+        embedding_service = OllamaEmbeddingService(model="rjmalagon/gte-qwen2-1.5b-instruct-embed-f16")
     else:
         # Log a warning if the API key is missing
         if not openai_api_key:
