@@ -209,7 +209,8 @@ async def update_node_edge_chunk_counts(graph_id: str, graph: GraphRAG):
 
 @app.get("/")
 def root():
-    return {"message": "Circlemind API is running."}
+    # Instead of returning API message, serve the frontend
+    return FileResponse(INDEX_HTML)
 
 @app.post("/graphs", response_model=CreateGraphResponse)
 async def create_graph(cfg: GraphConfig):
@@ -927,7 +928,7 @@ app.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "assets"), name="asset
 @app.get("/{full_path:path}")
 async def serve_frontend(request: Request, full_path: str):
     # If the path starts with /graphs, it's an API call
-    if full_path.startswith("graphs") or not full_path:
+    if full_path.startswith("graphs"):
         # This is an API route, so raise a 404 to let the API handlers take over
         raise HTTPException(status_code=404, detail="Not found")
     
