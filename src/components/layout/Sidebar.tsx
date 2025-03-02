@@ -58,7 +58,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
             collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
           )}
         >
-          Circlemind
+          Nationmind
         </span>
       </div>
 
@@ -150,27 +150,14 @@ export function Sidebar({ collapsed }: SidebarProps) {
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-gray-800 flex items-center justify-between">
-        <div className="flex items-center">
-          <div
-            className={cn(
-              "text-xs text-gray-400 transition-all duration-300 ease-in-out",
-              collapsed ? "w-0 opacity-0 overflow-hidden" : "w-auto opacity-100"
-            )}
-          >
-            <div>2 / 100 requests</div>
-            <div>Plan: Free</div>
-          </div>
-        </div>
+      <div className="p-4 border-t border-gray-800 flex items-center justify-center">
         <div
           className={cn(
-            "transition-all duration-300 ease-in-out",
+            "transition-all duration-300 ease-in-out text-xs text-gray-400 italic",
             collapsed ? "w-0 opacity-0 overflow-hidden" : "w-auto opacity-100"
           )}
         >
-          <Button variant="outline" size="sm" className="text-xs">
-            Upgrade
-          </Button>
+          "Knowledge is power" - Francis Bacon
         </div>
       </div>
     </div>

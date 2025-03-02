@@ -27,7 +27,7 @@ export function ChatPage() {
       id: "1",
       type: "system",
       content:
-        "Welcome to the debugger 👋 Ask a question to find and fix issues in your Knowledge Graph.",
+        "Welcome to Nationmind 👋 Ask a question to find and fix issues in your Knowledge Graph.",
     },
   ]);
   const [inputValue, setInputValue] = useState("");

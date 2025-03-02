@@ -38,8 +38,8 @@ from fast_graphrag._llm import DefaultLLMService, DefaultEmbeddingService
 
 # =============== FastAPI Setup ===============
 app = FastAPI(
-    title="Circlemind API", 
-    description="Backend API for Circlemind using fast-graphrag",
+    title="Nationmind API", 
+    description="Backend API for Nationmind using fast-graphrag",
     debug=True  # Enable debug mode
 )
 
