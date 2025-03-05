@@ -183,7 +183,7 @@ class OllamaLLMService(BaseLLMService):
         
         logger.info(f"Sending POST request to: {endpoint}")
 
-        async with httpx.AsyncClient(timeout=180) as client:
+        async with httpx.AsyncClient(timeout=5000) as client:
             try:
                 # Log a sample of the payload (not the full prompt to avoid log bloat)
                 payload_log = payload.copy()
@@ -473,7 +473,7 @@ class OllamaEmbeddingService(BaseEmbeddingService):
             
         embeddings = []
 
-        async with httpx.AsyncClient(timeout=180) as client:
+        async with httpx.AsyncClient(timeout=5000) as client:
             # We will batch the requests if we have more than max_elements_per_request
             for i in range(0, len(texts), self.max_elements_per_request):
                 batch = texts[i : i + self.max_elements_per_request]
