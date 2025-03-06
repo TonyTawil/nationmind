@@ -415,10 +415,30 @@ class OllamaLLMService(BaseLLMService):
                         pmodel = response_model.model_validate_json(answer_json)
                     # Add special handling for TEntityDescription model
                     elif response_model.__name__ == "TEntityDescription":
-                        # Create a valid TEntityDescription JSON structure
-                        description_json = json.dumps({"description": final_response_str})
-                        logger.info(f"Wrapping response in TEntityDescription structure: {description_json[:100]}...")
-                        pmodel = response_model.model_validate_json(description_json)
+                        # Check if it's already a valid JSON with description field
+                        try:
+                            json_obj = json.loads(final_response_str)
+                            if "description" in json_obj:
+                                # Already has description field, extract the value
+                                logger.info("Using description field from JSON response")
+                                description_text = json_obj["description"]
+                            else:
+                                # Valid JSON but no description field, use entire response
+                                logger.info("Using entire JSON as description")
+                                description_text = final_response_str
+                        except json.JSONDecodeError:
+                            # Not valid JSON, use the text as is
+                            logger.info("Using raw text as description")
+                            description_text = final_response_str
+
+                        # Create TEntityDescription directly
+                        logger.info("Creating TEntityDescription object directly")
+                        from fast_graphrag._models import TEntityDescription
+                        description_obj = TEntityDescription(description=description_text)
+                        messages = [
+                            {"role": "assistant", "content": final_response_str}
+                        ]
+                        return description_obj, messages
                     else:
                         pmodel = response_model.model_validate_json(final_response_str)
                     
@@ -448,10 +468,26 @@ class OllamaLLMService(BaseLLMService):
                     # For TEntityDescription, create a valid object directly
                     elif response_model.__name__ == "TEntityDescription":
                         try:
+                            # Check if it's already a valid JSON with description field
+                            try:
+                                json_obj = json.loads(final_response_str)
+                                if "description" in json_obj:
+                                    # Already has description field, extract the value
+                                    logger.info("Using description field from JSON response in fallback")
+                                    description_text = json_obj["description"]
+                                else:
+                                    # Valid JSON but no description field, use entire response
+                                    logger.info("Using entire JSON as description in fallback")
+                                    description_text = final_response_str
+                            except json.JSONDecodeError:
+                                # Not valid JSON, use the text as is
+                                logger.info("Using raw text as description in fallback")
+                                description_text = final_response_str
+                            
                             # Create TEntityDescription directly
                             logger.info("Creating TEntityDescription object directly")
                             from fast_graphrag._models import TEntityDescription
-                            description_obj = TEntityDescription(description=final_response_str)
+                            description_obj = TEntityDescription(description=description_text)
                             messages = [
                                 {"role": "assistant", "content": final_response_str}
                             ]
