@@ -142,6 +142,16 @@ class OllamaLLMService(BaseLLMService):
                         "required": ["entities", "relationships", "other_relationships"]
                     }
                     logger.debug(f"Created TGraph schema: {json.dumps(format_schema)[:200]}...")
+                # Add schema for TEntityDescription model
+                elif response_model.__name__ == "TEntityDescription":
+                    format_schema = {
+                        "type": "object",
+                        "properties": {
+                            "description": {"type": "string"}
+                        },
+                        "required": ["description"]
+                    }
+                    logger.debug(f"Created TEntityDescription schema: {json.dumps(format_schema)[:200]}...")
             except Exception as e:
                 logger.warning(f"Failed to create format schema: {e}")
                 logger.warning(f"Schema creation error details: {traceback.format_exc()}")
@@ -403,6 +413,12 @@ class OllamaLLMService(BaseLLMService):
                         answer_json = json.dumps({"answer": final_response_str})
                         logger.info(f"Wrapping response in TAnswer structure: {answer_json[:100]}...")
                         pmodel = response_model.model_validate_json(answer_json)
+                    # Add special handling for TEntityDescription model
+                    elif response_model.__name__ == "TEntityDescription":
+                        # Create a valid TEntityDescription JSON structure
+                        description_json = json.dumps({"description": final_response_str})
+                        logger.info(f"Wrapping response in TEntityDescription structure: {description_json[:100]}...")
+                        pmodel = response_model.model_validate_json(description_json)
                     else:
                         pmodel = response_model.model_validate_json(final_response_str)
                     
@@ -428,6 +444,20 @@ class OllamaLLMService(BaseLLMService):
                             return answer_obj, messages
                         except Exception as inner_e:
                             logger.warning(f"Failed to create fallback TAnswer: {inner_e}")
+                    
+                    # For TEntityDescription, create a valid object directly
+                    elif response_model.__name__ == "TEntityDescription":
+                        try:
+                            # Create TEntityDescription directly
+                            logger.info("Creating TEntityDescription object directly")
+                            from fast_graphrag._models import TEntityDescription
+                            description_obj = TEntityDescription(description=final_response_str)
+                            messages = [
+                                {"role": "assistant", "content": final_response_str}
+                            ]
+                            return description_obj, messages
+                        except Exception as inner_e:
+                            logger.warning(f"Failed to create fallback TEntityDescription: {inner_e}")
                     
                     # Return string fallback
                     messages = [
